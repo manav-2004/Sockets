@@ -15,7 +15,7 @@ const io = new Server(httpServer,{
     }
 })
 
-const users = [] 
+let users = [] 
 
 io.on('connection',(socket)=>{
 
@@ -38,7 +38,10 @@ io.on('connection',(socket)=>{
     })
 
     socket.on("disconnect",()=>{
-        io.emit("user-disconnected",users.filter((user)=>user.id !== socket.id))
+
+        users = users.filter((user)=>user.id !== socket.id)
+
+        io.emit("user-disconnected",users)
     })
 })
 

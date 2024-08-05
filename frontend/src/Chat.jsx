@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { RiArrowUpLine } from '@remixicon/react'
-import {v4 as uuidv4} from 'uuid'
+import { v4 as uuidv4 } from 'uuid'
 import './App.css'
-import {io} from 'socket.io-client'
+import { io } from 'socket.io-client'
+import { useDispatch, useSelector } from 'react-redux'
+import { logUser } from './features/userSlice'
 
-function Chat() {
+function Chat({setFirstPage}) {
     
     const socketRef = useRef(null)
 
-    const location = useLocation()
-    const navigate = useNavigate()
+    const user = useSelector(state => state.user.username)
+    const dispatch = useDispatch()
+    const reduxId = useSelector(state => state.user.id)
+    const reduxUsers = useSelector(state => state.user.users)
 
     const [currentId, setCurrentId]  = useState(null)
 
@@ -20,21 +23,19 @@ function Chat() {
     const [allMessages, setAllMessages] = useState([])
 
 
-
     useEffect(()=>{
 
-        if(!location?.state?.user){
-            navigate("/")
-            return ()=>{
-                socketRef.current.disconnect()
-            }
+        if(!user){
+            setFirstPage(true)
         }else{
+
             socketRef.current =  io(import.meta.env.VITE_API,{
                 withCredentials : true
-             })
+                })
             socketRef.current.on("connect",()=>{
                 setCurrentId(socketRef.current.id)
-                socketRef.current.emit("client-newUser",location?.state?.user)
+                dispatch(logUser({user,id : socketRef.current.id}))
+                socketRef.current.emit("client-newUser",user)
             })
         }
     },[])
@@ -67,7 +68,7 @@ function Chat() {
             })
 
             socketRef.current.on("server-newUser",(array)=>{
-                setUsers(array) 
+                setUsers(array)
             })
 
             socketRef.current.on("user-disconnected",(array)=>{
@@ -79,13 +80,14 @@ function Chat() {
 
   return (
     <div className='w-screen h-screen flex p-2'>
-        <div className='h-full w-1/3 flex flex-col gap-0 border-r-2'>
+        <div className='h-full w-1/4 flex flex-col gap-0 border-r-2'>
 
             <div className='w-full h-4/5 overflow-y-auto custom-scroll p-4 flex flex-col gap-4'>
                 {
-                    users.map((user)=>(
-                        <h1 key={user.id} className='text-2xl px-8 py-2 rounded-xl text-gray-600 font-mono font-semibold border-green-400 border-2'>
-                           {user.username}
+                    users.map((eachUser)=>(
+                        <h1 key={uuidv4()} className={`text-2xl px-8 py-2 rounded-xl text-gray-600 font-mono font-semibold
+                         border-green-400 border-2 ${eachUser.username === user ?'bg-green-300' : ''}`}>
+                           {eachUser.username}
                         </h1>
                     ))
                 }
@@ -99,7 +101,7 @@ function Chat() {
             </div>
 
         </div>
-        <div className='h-full w-2/3'>
+        <div className='h-full w-3/4'>
             <div className='w-full text-xl overflow-y-auto custom-scroll h-[90%] p-4'>
             {
 

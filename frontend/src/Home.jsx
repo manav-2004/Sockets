@@ -1,13 +1,19 @@
 import React, { useState } from 'react'
 import { RiArrowRightLine } from '@remixicon/react'
-import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import {logUser} from './features/userSlice'
+import Chat from './Chat'
 
 function Home() {
 
-    const [user, setUser] = useState("")
-    const navigate = useNavigate()
 
-  return (
+    const dispatch = useDispatch()
+
+    const [user, setUser] = useState("")
+    
+    const [firstPage, setFirstPage] = useState(true)
+
+  return firstPage ? (
     <div className='w-full h-screen p-4 flex'>
         <div className='w-1/2 h-full flex justify-center items-center bg-cyan-800 rounded-l-xl'>
             <img src="https://logowik.com/content/uploads/images/chat3893.logowik.com.webp" alt="" 
@@ -24,11 +30,10 @@ function Home() {
                 />
             </div>
             <button className='w-full h-1/2 flex justify-end items-end p-4' onClick={()=>{
-                user ? navigate("/chat",{
-                    state : {
-                        user
-                    }
-                }) : null
+                if (user){
+                    dispatch(logUser({user}))
+                    setFirstPage(false)
+                }
             }}>
                 <RiArrowRightLine
                     size={72}
@@ -38,6 +43,12 @@ function Home() {
         </div>
     </div>
   )
-}
+  :
+  (
+    <div className='h-screen w-screen'>
+        <Chat fn = {setFirstPage}/>
+    </div>
+  )
+}  
 
 export default Home
