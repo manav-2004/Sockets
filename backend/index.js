@@ -15,7 +15,8 @@ const io = new Server(httpServer,{
     }
 })
 
-let users = [] 
+let users = []
+let allTimeUsers = [] 
 
 io.on('connection',(socket)=>{
 
@@ -26,12 +27,25 @@ io.on('connection',(socket)=>{
             id : socket.id
         })
 
-        io.emit("server-newUser",users)
+        allTimeUsers.push({
+            username : user,
+            id : socket.id
+        })
+
+        io.emit("server-newUser",{
+            users,
+            allTimeUsers,
+            connectedUserData : {
+                type : "joined",
+                id : socket.id
+            }
+        })
     })
 
     socket.on("client-message",(message)=>{
         
         io.emit("server-message",{
+            type : "message",
             message,
             id : socket.id
         })
@@ -41,7 +55,13 @@ io.on('connection',(socket)=>{
 
         users = users.filter((user)=>user.id !== socket.id)
 
-        io.emit("user-disconnected",users)
+        io.emit("user-disconnected",{ 
+            users,
+            disconnectedUserData : {
+                type : "left",
+                id : socket.id
+            }
+        })
     })
 })
 
